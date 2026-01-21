@@ -1,16 +1,27 @@
-import pandas as pd, joblib, numpy as np
-from xgboost import XGBClassifier
-from sklearn.model_selection import train_test_split
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.multioutput import MultiOutputClassifier
+import joblib
 
-# 1) Gera dataset sintético balanceado (exemplo rápido)
-X, y = [], []
-for _ in range(200_000):
-    combo = sorted(np.random.choice(range(1, 26), 15, replace=False))
-    acertos = len(set(combo) & set(sorted(np.random.choice(range(1, 26), 15, replace=False))))
-    X.append(extrair_features(combo))
-    y.append(int(acertos >= 13))   # target 13+
+# 1. Carregar CSV
+df = pd.read_csv('loteria.csv')
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
-clf = XGBClassifier(n_estimators=1500, max_depth=5, learning_rate=0.01, scale_pos_weight=sum(y)/len(y))
-clf.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=50, verbose=False)
-joblib.dump(clf, "src/model.pkl")
+# 2. Criar targets binários (1 a 25)
+sorteios = [f'Bola{i}' for i in range(1, 16)]
+Y = []
+
+for _, row in df.iterrows():
+    sorteadas = row[sorteios].values
+    vetor = [1 if d in sorteadas else 0 for d in range(1, 26)]
+    Y.append(vetor)
+
+# 3. Feature simples: índice do sorteio
+X = [[i] for i in range(len(Y))]
+
+# 4. Treinar modelo
+model = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
+model.fit(X, Y)
+
+# 5. Salvar modelo
+joblib.dump(model, 'src/model.pkl')
+print("✅ Modelo treinado e salvo em src/model.pkl")
