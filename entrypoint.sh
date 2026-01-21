@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 set -e
 
 echo "🔧 Tornando build.sh executável..."
