@@ -3,10 +3,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
 import joblib
 
-# 1. Carregar CSV
-df = pd.read_csv('loteria.csv')
+# 1. Apenas últimos 300 sorteios
+df = pd.read_csv('loteria.csv').tail(300)
 
-# 2. Criar targets binários (1 a 25)
+# 2. Targets binários (1 a 25)
 sorteios = [f'Bola{i}' for i in range(1, 16)]
 Y = []
 
@@ -18,10 +18,12 @@ for _, row in df.iterrows():
 # 3. Feature simples: índice do sorteio
 X = [[i] for i in range(len(Y))]
 
-# 4. Treinar modelo
-model = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
+# 4. Modelo leve
+model = MultiOutputClassifier(
+    RandomForestClassifier(n_estimators=30, max_depth=10, random_state=42)
+)
 model.fit(X, Y)
 
-# 5. Salvar modelo
+# 5. Salva
 joblib.dump(model, 'src/model.pkl')
-print("✅ Modelo treinado e salvo em src/model.pkl")
+print("✅ Modelo leve treinado e salvo em src/model.pkl")
