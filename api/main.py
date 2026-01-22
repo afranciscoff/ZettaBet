@@ -5,6 +5,8 @@ import numpy as np
 from datetime import datetime
 from pydantic import BaseModel
 from pathlib import Path
+from sqlalchemy.exc import IntegrityError, DataError
+from db import SessionLocal, inserir_palpite_lotofacil   # vamos criar esse módulo
 
 app = FastAPI()
 
@@ -22,30 +24,40 @@ def build_features(draw_id: int):
     return np.array([[draw_id]])
 
 # ---------- rotas ----------
+from db import inserir_palpite_lotofacil
 @app.post("/lotofacil/generate")
 def lotofacil_gerar_palpites(body: GenReq):
-    """
-    Gera k palpites (15 dezenas) para o concurso draw_id.
-    Usa o modelo já carregado para amostrar 15 números entre 1-25.
-    """
+    # ---- gera os k jogos (seu código atual) ----
     X = build_features(body.draw_id)
-    # probabilidade de cada dezena (0/1) – média sobre os 25 estimadores
     probs = np.array([clf.predict_proba(X)[0][1] for clf in model.estimators_])
-    probs = probs / probs.sum()          # normaliza
-
+    probs = probs / probs.sum()
     rng = np.random.default_rng(seed=body.draw_id)
+
     jogos = []
     for _ in range(body.k):
-        dezenas = rng.choice(
-            np.arange(1, 26), size=15, replace=False, p=probs
+        dezenas = rng.choice(np.arange(1, 26), size=15, replace=False, p=probs)
+        dezenas = sorted(dezenas.tolist())
+        jogos.append(dezenas)
+
+    # ---- insere cada jogo no Postgres ----
+    ids = []
+    for dezenas in jogos:
+        palpite_id = inserir_palpite_lotofacil(
+            dezenas=dezenas,
+            motor_nome="zetta-ml",
+            motor_versao="v1.0",
+            seed=body.draw_id,
+            metadata={"draw_id": body.draw_id, "k": body.k}
         )
-        jogos.append(sorted(dezenas.tolist()))
+        ids.append(palpite_id)
 
     return {
         "concurso": body.draw_id,
         "quantidade": len(jogos),
-        "jogos": jogos
+        "jogos": jogos,
+        "palpite_ids": ids
     }
+
 
 @app.get("/previsao")
 def previsao():
