@@ -1,0 +1,37 @@
+
+C:\ZettaBet>curl -X POST localhost:8000/lotofacil/generate ^     -H "Content-Type: application/json" ^     -d "{\"draw_id\":2703,\"k\":5}"
+{"concurso":
+2703,"quantidade":5,"jogos"
+
+XX,02,05,XX,XX,11,XX,13,16,17,XX,XX,20,21,XX
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
+
+02,XX,XX,XX,XX,11,XX,13,16,XX,XX,20,21,XX,XX
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
+
+02,05,xx,xx,xx,11,xx,13,14,16,17,xx,20,21,xx
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
+
+02,04,05,07,08,09,11,12,13,14,17,18,19,20,21
+.....xx......xx..xx.xx.......xx................xx..xx.........
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
+
+
+01,02,07,08,09,10,12,13,14,17,19,20,21,23,24
+xx......xx..xx.xx..xx..xx.................xx..........xx..xx
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
+
+
+C:\ZettaBet>curl -X POST localhost:8000/lotofacil/generate ^     -H "Content-Type: application/json" ^     -d "{\"draw_id\":3593,\"k\":5}"
+{"concurso":3593,"quantidade":5,"jogos":
+
+xx,02,xx,05,xx,xx,xx,xx,14,17,xx,20,21,22,xx
+
+xx,03,05,xx,xx,xx,13,xx,17,xx,xx,20,21,xx,xx
+
+xx,xx,xx,xx,xx,xx,11,xx,13,xx,17,xx,20,xx,xx
+
+xx,02,xx,xx,xx,xx,11,xx,13,14,17,xx,xx,21,xx
+
+xx,02,xx,xx,xx,xx,13,xx,16,17,xx,20,22,xx,xx
+01,03,04,06,07,08,09,10,12,15,18,19,23,24,25
