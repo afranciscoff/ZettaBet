@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from models import (                      # mesma pasta ou ajuste o import
     Loteria, ExternalPalpite, Base
 )
-DATABASE_URL=postgresql://neondb_owner:npg_Lqjh6vGBVi5r@ep-black-hill-acpnaibc-pooler.sa-east-1.aws.neon.tech/Faixabs?sslmode=require&channel_binding=require
+DATABASE_URL=("postgresql://neondb_owner:npg_Lqjh6vGBVi5r@ep-black-hill-acpnaibc-pooler.sa-east-1.aws.neon.tech/Faixabs?sslmode=require&channel_binding=require")
 
 engine = create_engine(
     DATABASE_URL,
