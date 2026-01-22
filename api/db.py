@@ -1,4 +1,4 @@
-# api/db.py
+# api/db.py 22-01-2026
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import (                      # mesma pasta ou ajuste o import

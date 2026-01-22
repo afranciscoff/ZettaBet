@@ -1,3 +1,5 @@
+# main.py update para integrar com db.py 22-01-2026
+
 from fastapi import FastAPI
 import joblib
 import pandas as pd
