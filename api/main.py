@@ -82,3 +82,10 @@ def login(body: LoginReq):
         if not row:
             raise HTTPException(401, "Credenciais inválidas ou usuário inativo")
         return {"id": row[0]}
+
+        from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    with open("index.html", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
