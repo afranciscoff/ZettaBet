@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zetta.bet - Gerador Lotofácil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;margin:0;padding:20px}
+    .box{max-width:400px;margin:auto;background:#fff;padding:25px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    h2{text-align:center;color:#333}
+    label{display:block;margin-top:12px;font-weight:bold}
+    input[type=text],input[type=password],input[type=number]{width:100%;padding:8px;margin-top:4px;border:1px solid #ccc;border-radius:4px}
+    button{width:100%;padding:10px;margin-top:20px;background:#007bff;color:#fff;border:none;border-radius:4px;font-size:16px;cursor:pointer}
+    button:disabled{background:#6c757d}
+    .result{margin-top:20px;background:#e9f5ff;border-left:5px solid #007bff;padding:10px;border-radius:4px;white-space:pre-wrap}
+    .error{margin-top:20px;background:#f8d7da;border-left:5px solid #dc3545;padding:10px;border-radius:4px}
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>🍀 Gerar Palpites Lotofácil</h2>
+
+  <label>Usuário</label>
+  <input type="text" id="usuario" placeholder="seu_usuario">
+
+  <label>Senha</label>
+  <input type="password" id="senha" placeholder="sua_senha">
+
+  <label>Número de palpites</label>
+  <input type="number" id="k" value="5" min="1" max="50">
+
+  <button id="btn" onclick="gerar()">Gerar Palpites</button>
+
+  <div id="out"></div>
+</div>
+
+<script>
+  const API = 'https://zettabet-api.onrender.com';   // ← troque pelo seu domínio
+
+  async function gerar(){
+    const btn = document.getElementById('btn');
+    const out = document.getElementById('out');
+    btn.disabled = true;
+    out.className = '';
+
+    const usuario = document.getElementById('usuario').value.trim();
+    const senha   = document.getElementById('senha').value.trim();
+    const k       = parseInt(document.getElementById('k').value);
+
+    if(!usuario || !senha) { alert('Preencha usuário/senha'); btn.disabled=false; return; }
+
+    try {
+      // 1) LOGIN → retorna id do usuário
+      const loginRes = await fetch(`${API}/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({usuario, senha})
+      });
+
+      if(!loginRes.ok) throw new Error('Credenciais inválidas');
+      const {id: userId} = await loginRes.json();
+
+      // 2) obtém último concurso (ou use fixo)
+      const prevRes = await fetch(`${API}/previsao`);
+      const {top_15} = await prevRes.json();
+      const drawId = 3593;   // ← ou dinâmico se tiver endpoint
+
+      // 3) GERA palpites vinculado ao usuário
+      const genRes = await fetch(`${API}/lotofacil/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': userId
+        },
+        body: JSON.stringify({draw_id: drawId, k})
+      });
+
+      if(!genRes.ok) throw new Error('Erro ao gerar palpites');
+      const data = await genRes.json();
+
+      // 4) mostra resultado
+      let txt = `Concurso: ${data.concurso}\nQuantidade: ${data.quantidade}\n\n`;
+      data.jogos.forEach((j, i) => txt += `Jogo ${i+1}: ${j.join('-')}\n`);
+      txt += `\nIDs inseridos: ${data.palpite_ids.join(', ')}`;
+      out.textContent = txt;
+      out.className = 'result';
+
+    } catch (err) {
+      out.textContent = err.message || 'Erro desconhecido';
+      out.className = 'error';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
