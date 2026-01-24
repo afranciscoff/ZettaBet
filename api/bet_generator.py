@@ -1,36 +1,30 @@
-# models/bet_generator.py
+# api/bet_generator.py  23-01-2026
 import numpy as np
-from sqlalchemy.orm import Session
-from app.db import Bet, SessionLocal
-from app.ml import load_model, normalize_hits
+from datetime import datetime
+from pathlib import Path
+import joblib
 
-def generate_games(draw_id: int, k: int = 1, cold_start: bool = False):
-    """
-    Gera k jogos (palpites) para o concurso draw_id.
-    Retorna lista de dicts pronta para inserir na tabela `bets_staging`.
-    """
-    model = load_model()                       # seu .pkl em /models
-    features = build_features(draw_id)         # seu pipeline atual
-    probas = model.predict_proba(features)[0]  # vetor 1x25 (ex: 25 dezenas)
+MODEL_PATH = Path(__file__).with_name("models") / "lotofacil.pkl"
 
-    # evita repetir mesma sequência se k>1
+def load_model():
+    return joblib.load(MODEL_PATH)
+
+def build_features(draw_id: int):
+    """Substitua pelo seu pipeline real. Exemplo mínimo."""
+    return np.array([[draw_id]])
+
+def gera_palpites_lotofacil(draw_id: int, k: int = 1) -> list[list[int]]:
+    """
+    Retorna k listas de 15 dezenas (1..25) sem tocar no banco.
+    """
+    model = load_model()
+    X = build_features(draw_id)
+    probs = np.array([clf.predict_proba(X)[0][1] for clf in model.estimators_])
+    probs = probs / probs.sum()
+
     rng = np.random.default_rng(seed=draw_id)
-
-    games = []
+    jogos = []
     for _ in range(k):
-        # sampling ponderado sem reposição
-        dezenas = rng.choice(
-            np.arange(1, 26),         # 1..25 (ajuste ao seu jogo)
-            size=15,                  # qtde dezenas por jogo
-            replace=False,
-            p=probas / probas.sum()
-        )
-        games.append(
-            dict(
-                draw_id=draw_id,
-                numbers=sorted(dezenas.tolist()),
-                score=normalize_hits(dezenas, probas),  # métrica interna
-                generated_at=datetime.utcnow()
-            )
-        )
-    return games
+        dezenas = rng.choice(np.arange(1, 26), size=15, replace=False, p=probas)
+        jogos.append(sorted(dezenas.tolist()))
+    return jogos
