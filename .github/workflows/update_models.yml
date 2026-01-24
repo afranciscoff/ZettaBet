@@ -1,1 +1,72 @@
- 
+name: Atualiza modelos após sorteio
+
+on:
+  schedule:
+    # SEG 20h05  - Lotomania
+    - cron: '5 20 * * 1'
+    # TER 20h00  - Mega-Sena
+    - cron: '0 20 * * 2'
+    # QUA 20h05  - Lotomania
+    - cron: '5 20 * * 3'
+    # QUI 20h00  - Mega-Sena
+    - cron: '0 20 * * 4'
+    # SEX 20h05  - Lotomania
+    - cron: '5 20 * * 5'
+    # SÁB 20h00  - Mega-Sena
+    - cron: '0 20 * * 6'
+    # DOM 20h00  - Lotofácil
+    - cron: '0 20 * * 0'
+
+  workflow_dispatch:   # botão manual
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - loteria: lotofacil
+            codigo: LTF
+            dias: "0"
+          - loteria: megasena
+            codigo: MGS
+            dias: "2,4,6"
+          - loteria: lotomania
+            codigo: LMA
+            dias: "1,3,5"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instala dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+
+      - name: Baixa resultado oficial
+        run: |
+          python scripts/fetch_result.py \
+            --loteria ${{ matrix.loteria }} \
+            --codigo ${{ matrix.codigo }} \
+            --output loteria.csv
+
+      - name: Re-treina modelo leve
+        run: |
+          python scripts/retrain.py \
+            --loteria ${{ matrix.loteria }} \
+            --csv loteria.csv \
+            --model-out api/models/${{ matrix.loteria }}.pkl
+
+      - name: Commit & push do novo modelo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add api/models/${{ matrix.loteria }}.pkl loteria.csv
+          git commit -m "bot: atualiza modelo ${{ matrix.loteria }} $(date +%F)" || exit 0
+          git push 
